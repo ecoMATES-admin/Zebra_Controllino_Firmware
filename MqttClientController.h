@@ -35,15 +35,15 @@ class MqttClientController {
     Valve & _valveHyg;
     FloatSwitch & _floatSwitch;
     PubSubClient & _client;
-    JsonDocument _doc;
+    JsonDocument _docOut;
 
     char _output[100];
     //size_t _outputCapacity;
 
   public:
     // Constructor
-    MqttClientController(PubSubClient &client, JsonDocument doc, Pump &p, Valve &vR, Valve &vH, FloatSwitch &floatS, unsigned long cInterval)
-      : _client(client), _doc(doc), _pump(p), _valveReservoir(vR), _valveHyg(vH), _floatSwitch(floatS), _systemPeriod(cInterval), _previousTime(0), _currentState(State::CONNECT) {
+    MqttClientController(PubSubClient &client, JsonDocument docOut, Pump &p, Valve &vR, Valve &vH, FloatSwitch &floatS, unsigned long cInterval)
+      : _client(client), _docOut(docOut), _pump(p), _valveReservoir(vR), _valveHyg(vH), _floatSwitch(floatS), _systemPeriod(cInterval), _previousTime(0), _currentState(State::CONNECT) {
     }
 
     // Method to update the control state
@@ -103,12 +103,12 @@ class MqttClientController {
             _client.publish("cont/sensorData", "{\"Sensor1\": 40.55, \"TSensor2\": 20.33 , \"Sensor3\": 65.23, \"Sensor4\": 25.45}");
             _client.publish("cont/actuatorData", "{\"Actuator1\": 1, \"Actuator2\": 45 , \"Actuator3\": 1, \"Actuator4\": 0}");
             _client.publish("cont/watchdogData", "{\"WD1\": 0, \"WD2\": 10 , \"WD3\": 0, \"WD4\": 120, \"WD5\": 0, \"WD6\": 10 , \"WD7\": 0, \"WD8\": 120}");/*
-            _doc["tempFermenter"] = _tempFermenter.getSensorValue();
-            _doc["tempReservoir"] = _tempReservoir.getSensorValue();
-            _doc["hydPressure"] = _pressure.getSensorValue();
-            _doc["weight"] = _weight.getSensorValue();
+            _docOut["tempFermenter"] = _tempFermenter.getSensorValue();
+            _docOut["tempReservoir"] = _tempReservoir.getSensorValue();
+            _docOut["hydPressure"] = _pressure.getSensorValue();
+            _docOut["weight"] = _weight.getSensorValue();
 
-            serializeJson(_doc, _output);
+            serializeJson(_docOut, _output);
             _client.publish("ind/SensorData", _output);
             Serial.println(_output);*/
 

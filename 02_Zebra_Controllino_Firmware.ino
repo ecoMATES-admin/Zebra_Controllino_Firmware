@@ -35,9 +35,10 @@ IPAddress ip(192, 168, 1, 12);
 IPAddress server(192, 168, 1, 11);
 EthernetClient ethClient;
 PubSubClient client(ethClient);
-JsonDocument doc;
+JsonDocument docOut;
+JsonDocument docIn;
 
-MqttClientController mqttClientCtrl(client, doc, pump, valveReservoir, valveHyg, floatSwitch, systemPeriod);
+MqttClientController mqttClientCtrl(client, docOut, pump, valveReservoir, valveHyg, floatSwitch, systemPeriod);
 
 ReservoirController reservoirController(pump, valveReservoir, valveHyg, floatSwitch, systemPeriod);
 
@@ -45,10 +46,28 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
-  for (int i=0;i<length;i++) {
+  for (int i = 0; i < length; i++) {
     Serial.print((char)payload[i]);
   }
   Serial.println();
+  DeserializationError error = deserializeJson(docIn, payload, 200);
+
+  if (error) {
+    Serial.print("deserializeJson() failed: ");
+    Serial.println(error.c_str());
+    return;
+  }
+
+ 
+  double tempFermenter = docIn["tempFermenter"]; // "40.55"
+  double tempReservoir = docIn["tempReservoir"]; // "40.55"
+  double hydPressure = docIn["hydPressure"]; // "70.55"
+  double weight = docIn["weight"]; // "21.76"
+
+  Serial.println(tempFermenter);
+  Serial.println(tempReservoir);
+  Serial.println(hydPressure);
+  Serial.println(weight);
 }
 
 void setup()
@@ -70,26 +89,26 @@ void loop()
   //valveHyg.deactivate();
   //valveReservoir.activate();
 
-//Serial.println(floatSwitch.readData());
-//delay(500);
+  //Serial.println(floatSwitch.readData());
+  //delay(500);
 
   /*
-  uint32_t measurementResult = analogRead(CONTROLLINO_AI0);
-  uint32_t motorRun = digitalRead(CONTROLLINO_DI3);
+    uint32_t measurementResult = analogRead(CONTROLLINO_AI0);
+    uint32_t motorRun = digitalRead(CONTROLLINO_DI3);
 
-  //calculate and set run and speed of motor
-  uint32_t pwmValue = measurementResult/4;
-  analogWrite(PUMP_FORWARD, pwmValue);
-  digitalWrite(PUMP_CONTROL, motorRun);
-  
-  //Print Motor Status
-  if(motorRun){
+    //calculate and set run and speed of motor
+    uint32_t pwmValue = measurementResult/4;
+    analogWrite(PUMP_FORWARD, pwmValue);
+    digitalWrite(PUMP_CONTROL, motorRun);
+
+    //Print Motor Status
+    if(motorRun){
     Serial.print("ON");
-  }else{
+    }else{
     Serial.print("OFF");
-  }
-  Serial.print("\t");
-  Serial.print(pwmValue*100/256);
-  Serial.println("%");
+    }
+    Serial.print("\t");
+    Serial.print(pwmValue*100/256);
+    Serial.println("%");
   */
 }
