@@ -5,7 +5,6 @@
 #include "Pump.h"
 #include "Valve.h"
 
-//#define ARDUINOJSON_ENABLE_PROGMEM 0
 #include <ArduinoJson.h>
 
 #include <SPI.h>

@@ -3,7 +3,8 @@
 
 enum class ActuatorType {
     PUMP,
-    VALVE
+    VALVE,
+    HEATING_MAT
     // Add more types as needed
 };
 

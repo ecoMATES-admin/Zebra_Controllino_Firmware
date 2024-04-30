@@ -3,9 +3,11 @@
 #include "Valve.h"
 #include "Pump.h"
 #include "ReservoirController.h"
+#include "FermenterController.h"
 #include "MqttClientController.h"
+#include "IndSensors.h"
+#include "HeatingMat.h"
 
-//#define ARDUINOJSON_ENABLE_PROGMEM 0
 #include <ArduinoJson.h>
 
 bool controller = true;
@@ -27,7 +29,8 @@ FloatSwitch floatSwitch(11, FLOAT_SWITCH);
 Valve valveReservoir(2, VALVE_RES_OPEN, VALVE_RES_CLOSE);
 Valve valveHyg(3, VALVE_HYG_OPEN, VALVE_HYG_CLOSE);
 Pump pump(1, PUMP_CONTROL, PUMP_FORWARD);
-
+HeatingMat heatingMat(4, 99); //######################################## HOW TO USE Controllino realys? ###################################
+IndSensors indSensors;
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
@@ -39,8 +42,8 @@ JsonDocument docOut;
 JsonDocument docIn;
 
 MqttClientController mqttClientCtrl(client, docOut, pump, valveReservoir, valveHyg, floatSwitch, systemPeriod);
-
 ReservoirController reservoirController(pump, valveReservoir, valveHyg, floatSwitch, systemPeriod);
+FermenterController fermenterController(indSensors, heatingMat, systemPeriod);
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
@@ -59,14 +62,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 
  
-  double tempFermenter = docIn["tempFermenter"]; // "40.55"
-  double tempReservoir = docIn["tempReservoir"]; // "40.55"
-  double hydPressure = docIn["hydPressure"]; // "70.55"
-  double weight = docIn["weight"]; // "21.76"
+  double tempFermenter = docIn["tempFermenter"]; 
+  double tempReservoir = docIn["tempReservoir"]; 
+  double hydPressure = docIn["hydPressure"]; 
+  double weight = docIn["weight"];
+  indSensors.setSensorValue(tempFermenter, 1); 
 
+  Serial.print("tempFermenter: ");
   Serial.println(tempFermenter);
+  Serial.print("tempReservoir: ");
   Serial.println(tempReservoir);
+  Serial.print("hydPressure: ");
   Serial.println(hydPressure);
+  Serial.print("weight: ");
   Serial.println(weight);
 }
 
