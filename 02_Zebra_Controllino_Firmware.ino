@@ -23,13 +23,14 @@ const unsigned long loggingInterval = 1000;
 #define PUMP_CONTROL CONTROLLINO_DO7
 #define PUMP_FORWARD CONTROLLINO_DO6
 #define FLOAT_SWITCH CONTROLLINO_DI0
+#define HEATING_MAT CONTROLLINO_R0
 
 FloatSwitch floatSwitch(11, FLOAT_SWITCH);
 
 Valve valveReservoir(2, VALVE_RES_OPEN, VALVE_RES_CLOSE);
 Valve valveHyg(3, VALVE_HYG_OPEN, VALVE_HYG_CLOSE);
 Pump pump(1, PUMP_CONTROL, PUMP_FORWARD);
-HeatingMat heatingMat(4, 99); //######################################## HOW TO USE Controllino realys? ###################################
+HeatingMat heatingMat(4, HEATING_MAT);
 IndSensors indSensors;
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
@@ -92,31 +93,7 @@ void setup()
 
 void loop()
 {
-  mqttClientCtrl.run();
-  //reservoirController.firstTest();
-  //valveHyg.deactivate();
-  //valveReservoir.activate();
-
-  //Serial.println(floatSwitch.readData());
-  //delay(500);
-
-  /*
-    uint32_t measurementResult = analogRead(CONTROLLINO_AI0);
-    uint32_t motorRun = digitalRead(CONTROLLINO_DI3);
-
-    //calculate and set run and speed of motor
-    uint32_t pwmValue = measurementResult/4;
-    analogWrite(PUMP_FORWARD, pwmValue);
-    digitalWrite(PUMP_CONTROL, motorRun);
-
-    //Print Motor Status
-    if(motorRun){
-    Serial.print("ON");
-    }else{
-    Serial.print("OFF");
-    }
-    Serial.print("\t");
-    Serial.print(pwmValue*100/256);
-    Serial.println("%");
-  */
+  sdmqttClientCtrl.run();
+  //indSensors.testerFermenterController();
+  fermenterController.run();
 }
