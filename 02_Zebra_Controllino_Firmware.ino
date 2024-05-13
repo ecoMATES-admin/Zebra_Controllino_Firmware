@@ -1,4 +1,5 @@
 #include <Controllino.h>
+#include <SPI.h>
 #include "FloatSwitch.h"
 #include "Valve.h"
 #include "Pump.h"
@@ -7,6 +8,7 @@
 #include "MqttClientController.h"
 #include "IndSensors.h"
 #include "HeatingMat.h"
+#include "PumpScheduler.h"
 
 #include <ArduinoJson.h>
 
@@ -45,6 +47,11 @@ JsonDocument docIn;
 MqttClientController mqttClientCtrl(client, docOut, pump, valveReservoir, valveHyg, floatSwitch, systemPeriod);
 ReservoirController reservoirController(pump, valveReservoir, valveHyg, floatSwitch, systemPeriod);
 FermenterController fermenterController(indSensors, heatingMat, systemPeriod);
+PumpScheduler pumpScheduler;
+
+/*RTC Test*/
+int testState = 0;
+int temp;
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
@@ -62,12 +69,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
     return;
   }
 
- 
-  double tempFermenter = docIn["tempFermenter"]; 
-  double tempReservoir = docIn["tempReservoir"]; 
-  double hydPressure = docIn["hydPressure"]; 
+
+  double tempFermenter = docIn["tempFermenter"];
+  double tempReservoir = docIn["tempReservoir"];
+  double hydPressure = docIn["hydPressure"];
   double weight = docIn["weight"];
-  indSensors.setSensorValue(tempFermenter, 1); 
+  indSensors.setSensorValue(tempFermenter, 1);
 
   Serial.print("tempFermenter: ");
   Serial.println(tempFermenter);
@@ -89,11 +96,56 @@ void setup()
   Ethernet.begin(mac, ip);
   delay(2000);
 
+  Controllino_RTC_init();
+  Controllino_ClearAlarm();
+  Controllino_PrintTimeAndDate();
+
+  pinMode(CONTROLLINO_RTC_INTERRUPT, INPUT_PULLUP);
+
+
 }
 
 void loop()
 {
-  sdmqttClientCtrl.run();
+    pumpScheduler.rtcAlarm();
+  //sdmqttClientCtrl.run();
   //indSensors.testerFermenterController();
-  fermenterController.run();
+  //fermenterController.run();
+
+  /*RTC Test*/
+  switch (testState) {
+    case 0:
+      temp = Controllino_SetAlarm(14, 50);
+      Serial.print("Alarm set: ");
+      Serial.println(temp);
+      testState++;
+      break;
+    case 1:
+      if (pumpScheduler.getFlag()){
+        pumpScheduler.setFlag(false);
+        testState++;
+      }
+      break;
+    case 2:
+      temp = Controllino_SetAlarm(14, 52);
+      Serial.print("Alarm set: ");
+      Serial.println(temp);
+      testState++;
+      break;
+    case 3:
+      if (pumpScheduler.getFlag()){
+        pumpScheduler.setFlag(false);
+      }
+      break;
+    case 4:
+      temp = Controllino_SetAlarm(14, 54);
+      Serial.print("Alarm set: ");
+      Serial.println(temp);
+      testState++;
+      break;
+    case 5:
+     break;
+
+  }
+
 }
