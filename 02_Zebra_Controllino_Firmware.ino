@@ -34,6 +34,8 @@ Valve valveHyg(3, VALVE_HYG_OPEN, VALVE_HYG_CLOSE);
 Pump pump(1, PUMP_CONTROL, PUMP_FORWARD);
 HeatingMat heatingMat(4, HEATING_MAT);
 IndSensors indSensors;
+PumpScheduler pumpScheduler;
+
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 };
@@ -45,9 +47,9 @@ JsonDocument docOut;
 JsonDocument docIn;
 
 MqttClientController mqttClientCtrl(client, docOut, pump, valveReservoir, valveHyg, floatSwitch, systemPeriod);
-ReservoirController reservoirController(pump, valveReservoir, valveHyg, floatSwitch, systemPeriod);
+ReservoirController reservoirController(pumpScheduler, pump, valveReservoir, valveHyg, floatSwitch, systemPeriod);
 FermenterController fermenterController(indSensors, heatingMat, systemPeriod);
-PumpScheduler pumpScheduler;
+
 
 /*RTC Test*/
 int testState = 0;
@@ -115,7 +117,7 @@ void loop()
   /*RTC Test*/
   switch (testState) {
     case 0:
-      temp = Controllino_SetAlarm(14, 50);
+      temp = pumpScheduler.setAlarm(10,50);
       Serial.print("Alarm set: ");
       Serial.println(temp);
       testState++;
@@ -127,7 +129,7 @@ void loop()
       }
       break;
     case 2:
-      temp = Controllino_SetAlarm(14, 52);
+      temp = pumpScheduler.setAlarm(10,52);
       Serial.print("Alarm set: ");
       Serial.println(temp);
       testState++;
@@ -135,10 +137,11 @@ void loop()
     case 3:
       if (pumpScheduler.getFlag()){
         pumpScheduler.setFlag(false);
+        testState++;
       }
       break;
     case 4:
-      temp = Controllino_SetAlarm(14, 54);
+      temp = pumpScheduler.setAlarm(10,54);
       Serial.print("Alarm set: ");
       Serial.println(temp);
       testState++;

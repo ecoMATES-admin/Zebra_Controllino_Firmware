@@ -4,10 +4,12 @@
 #include "FloatSwitch.h"
 #include "Pump.h"
 #include "Valve.h"
+#include "PumpScheduler.h"
 
 class ReservoirController {
   private:
     enum class State {
+      SETUP,
       IDLE,
       KREISLAUF,
       PUMPEN,
@@ -24,19 +26,24 @@ class ReservoirController {
     Valve &valveReservoir;
     Valve &valveHyg;
     FloatSwitch &floatSwitch;
+    PumpScheduler &pumpScheduler;
 
     State currentState;
 
-uint32_t timerStartidle = 200; //entspricht 10sec
-uint32_t timerMixing = 300;
-uint32_t timerSterilization = 100;
-uint32_t timerDrain = 250; 
+    uint32_t timerStartidle = 200; //entspricht 10sec
+    uint32_t timerMixing = 300;
+    uint32_t timerSterilization = 100;
+    uint32_t timerDrain = 250;
+
+    uint8_t _pumpInterval = 8; // values between [2-24]
+    uint8_t _currentHour;
+    uint8_t _pumpHour;
 
 
   public:
     // Constructor
-    ReservoirController(Pump &p, Valve &vR, Valve &vH, FloatSwitch &floatS, unsigned long sysPeriod)
-      : pump(p), valveReservoir(vR), valveHyg(vH), floatSwitch(floatS), systemPeriod(sysPeriod), previousTime(0), currentState(State::IDLE) {}
+    ReservoirController(PumpScheduler &pS, Pump &p, Valve &vR, Valve &vH, FloatSwitch &floatS, unsigned long sysPeriod)
+      : pumpScheduler(pS), pump(p), valveReservoir(vR), valveHyg(vH), floatSwitch(floatS), systemPeriod(sysPeriod), previousTime(0), currentState(State::SETUP) {}
 
     // Method to update the control state
     void firstTest() {
@@ -49,6 +56,9 @@ uint32_t timerDrain = 250;
         uint32_t pwmValue = potiResult / 4;
 
         switch (currentState) {
+          case State::SETUP:
+            currentState = State::IDLE;
+            break;
           case State::IDLE:
             pump.deactivate();
             valveReservoir.deactivate();
@@ -89,7 +99,6 @@ uint32_t timerDrain = 250;
             }
             break;
         }
-
         Serial.print(static_cast<int>(currentState));
         Serial.print("\t");
         if (pump.isActive()) {
@@ -104,9 +113,67 @@ uint32_t timerDrain = 250;
       }
     }
 
-  private:
+    void run() {
+      unsigned long currentTime = millis();
+      if ( currentTime - previousTime >= systemPeriod ) {
+        previousTime = currentTime;
+        timer++;
 
-    // Additional control methods and logic can be added here
+        uint32_t potiResult = analogRead(CONTROLLINO_AI0);
+        uint32_t pwmValue = potiResult / 4;
+
+        switch (currentState) {
+          case State::SETUP:
+            _currentHour = Controllino_GetHour();
+            _pumpHour = _currentHour + _pumpInterval - (_currentHour % _pumpInterval);
+            pumpScheduler.setAlarm(_pumpHour, 0);
+            currentState = State::IDLE;
+            break;
+          case State::IDLE:
+            pump.deactivate();
+            valveReservoir.deactivate();
+            valveHyg.deactivate();
+            if (pumpScheduler.rtcAlarm()) {
+              currentState = State::KREISLAUF;
+              timer = 0;
+            }
+            break;
+          case State::KREISLAUF:
+            pump.pumpControl(true, pwmValue);
+            if (timer >= timerMixing) {
+              currentState = State::PUMPEN;
+              timer = 0;
+            }
+            break;
+          case State::PUMPEN:
+            pump.pumpControl(true, pwmValue);
+            valveReservoir.activate();
+            if (floatSwitch.readData() == HIGH) { //TO DO timeout implementieren
+              currentState = State::HYGIENISIEREN;
+              pumpScheduler.setAlarm(Controllino_GetHour()+1, Controllino_GetMinute() + 1);
+              timer = 0;
+            }
+            break;
+          case State::HYGIENISIEREN:
+            valveReservoir.deactivate();
+            pump.deactivate();
+            if (pumpScheduler.rtcAlarm()) {
+              currentState = State::ABLASSEN;
+              timer = 0;
+            }
+            break;
+          case State::ABLASSEN:
+            valveHyg.activate();
+            if (timer >= timerDrain) {
+              currentState = State::SETUP;
+              timer = 0;
+            }
+            break;
+        }
+      }
+    }
+
+
 };
 
 

@@ -13,8 +13,9 @@ class PumpScheduler {
     bool rtcAlarm() {
       if (digitalRead(CONTROLLINO_RTC_INTERRUPT) == 0) {
         Controllino_ClearAlarm();
-        Serial.println("Alarm triggered");
-        _pumpFlag = false;
+        Serial.print("Alarm triggered: ");
+        Controllino_PrintTimeAndDate();
+        _pumpFlag = true;
         return true;
       } else {
         return false;
@@ -22,7 +23,7 @@ class PumpScheduler {
     }
 
     bool setAlarm(int h, int m){
-      Controllino_SetAlarm(h, m);
+      return Controllino_SetAlarm(h, m);
     }
 
     bool getFlag(){
