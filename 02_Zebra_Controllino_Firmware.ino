@@ -56,13 +56,14 @@ int testState = 0;
 int temp;
 
 void callback(char* topic, byte* payload, unsigned int length) {
+  /*
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
   for (int i = 0; i < length; i++) {
     Serial.print((char)payload[i]);
   }
-  Serial.println();
+  Serial.println();*/
   DeserializationError error = deserializeJson(docIn, payload, 200);
 
   if (error) {
@@ -109,9 +110,13 @@ void setup()
 
 void loop()
 {
+    //firmware
     pumpScheduler.rtcAlarm();
-  //mqttClientCtrl.run();
-  //indSensors.testerFermenterController();
-  //fermenterController.run();
+    mqttClientCtrl.run();
+    fermenterController.run();
+    reservoirController.run();
+
+    //manual manipulation
+    //valveHyg.activate();
 
 }

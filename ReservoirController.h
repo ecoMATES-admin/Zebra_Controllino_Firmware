@@ -35,7 +35,7 @@ class ReservoirController {
     uint32_t timerSterilization = 100;
     uint32_t timerDrain = 250;
 
-    uint8_t _pumpInterval = 8; // values between [2-24]
+    uint8_t _pumpInterval = 2; // values between [2-24]
     uint8_t _currentHour;
     uint8_t _pumpHour;
 
@@ -133,7 +133,8 @@ class ReservoirController {
             pump.deactivate();
             valveReservoir.deactivate();
             valveHyg.deactivate();
-            if (pumpScheduler.rtcAlarm()) {
+            if (pumpScheduler.getFlag()) {
+              pumpScheduler.setFlag(false);
               currentState = State::KREISLAUF;
               timer = 0;
             }
@@ -150,14 +151,19 @@ class ReservoirController {
             valveReservoir.activate();
             if (floatSwitch.readData() == HIGH) { //TO DO timeout implementieren
               currentState = State::HYGIENISIEREN;
-              pumpScheduler.setAlarm(Controllino_GetHour()+1, Controllino_GetMinute() + 1);
+              //pumpScheduler.setAlarm(Controllino_GetHour() + 1, Controllino_GetMinute() + 1);
+
+              //test version
+              pumpScheduler.setAlarm(Controllino_GetHour(), Controllino_GetMinute() + 2);
+              
               timer = 0;
             }
             break;
           case State::HYGIENISIEREN:
             valveReservoir.deactivate();
             pump.deactivate();
-            if (pumpScheduler.rtcAlarm()) {
+            if (pumpScheduler.getFlag()) {
+              pumpScheduler.setFlag(false);
               currentState = State::ABLASSEN;
               timer = 0;
             }
@@ -169,6 +175,18 @@ class ReservoirController {
               timer = 0;
             }
             break;
+        }
+        if (currentState == State::PUMPEN) {
+          Serial.print(static_cast<int>(currentState));
+          Serial.print("\t");
+          if (pump.isActive()) {
+            Serial.print("ON");
+          } else {
+            Serial.print("OFF");
+          }
+          Serial.print("\t");
+          Serial.print(pwmValue * 100 / 256);
+          Serial.println("%");
         }
       }
     }

@@ -42,6 +42,7 @@ class FermenterController {
             }
             break;
           case State::MAT_ON:
+          //Serial.println("FermenterController -> MAT_ON");
             _heatingMat.activate();
             if (_indSensors.getTempFermenterInt() > fermenterTempMax) {
               currentState = State::MAT_OFF;
