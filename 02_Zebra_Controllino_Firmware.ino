@@ -110,45 +110,8 @@ void setup()
 void loop()
 {
     pumpScheduler.rtcAlarm();
-  //sdmqttClientCtrl.run();
+  //mqttClientCtrl.run();
   //indSensors.testerFermenterController();
   //fermenterController.run();
-
-  /*RTC Test*/
-  switch (testState) {
-    case 0:
-      temp = pumpScheduler.setAlarm(10,50);
-      Serial.print("Alarm set: ");
-      Serial.println(temp);
-      testState++;
-      break;
-    case 1:
-      if (pumpScheduler.getFlag()){
-        pumpScheduler.setFlag(false);
-        testState++;
-      }
-      break;
-    case 2:
-      temp = pumpScheduler.setAlarm(10,52);
-      Serial.print("Alarm set: ");
-      Serial.println(temp);
-      testState++;
-      break;
-    case 3:
-      if (pumpScheduler.getFlag()){
-        pumpScheduler.setFlag(false);
-        testState++;
-      }
-      break;
-    case 4:
-      temp = pumpScheduler.setAlarm(10,54);
-      Serial.print("Alarm set: ");
-      Serial.println(temp);
-      testState++;
-      break;
-    case 5:
-     break;
-
-  }
 
 }
