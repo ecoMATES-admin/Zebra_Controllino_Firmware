@@ -1,5 +1,7 @@
 #include <Controllino.h>
 #include <SPI.h>
+
+#include "CurrentSensor.h"
 #include "FloatSwitch.h"
 #include "Valve.h"
 #include "Pump.h"
@@ -26,9 +28,13 @@ const unsigned long loggingInterval = 1000;
 #define PUMP_FORWARD CONTROLLINO_DO6
 #define FLOAT_SWITCH CONTROLLINO_DI0
 #define HEATING_MAT CONTROLLINO_R0
+#define CURRENT A7
 
 FloatSwitch floatSwitch(11, FLOAT_SWITCH);
+ACS712  acs(CURRENT, 5.0, 1023, 100);
 
+
+CurrentSensor currentSensor(12, CURRENT, acs, systemPeriod);
 Valve valveReservoir(2, VALVE_RES_OPEN, VALVE_RES_CLOSE);
 Valve valveHyg(3, VALVE_HYG_OPEN, VALVE_HYG_CLOSE);
 Pump pump(1, PUMP_CONTROL, PUMP_FORWARD);
@@ -111,10 +117,10 @@ void setup()
 void loop()
 {
     //firmware
-    pumpScheduler.rtcAlarm();
+    //pumpScheduler.rtcAlarm();
     mqttClientCtrl.run();
     fermenterController.run();
-    reservoirController.run();
+    //reservoirController.run();
 
     //manual manipulation
     //valveHyg.activate();

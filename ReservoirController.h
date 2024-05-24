@@ -78,7 +78,7 @@ class ReservoirController {
           case State::PUMPEN:
             pump.pumpControl(true, pwmValue);
             valveReservoir.activate();
-            if (floatSwitch.readData() == HIGH) {
+            if (floatSwitch.readValue() == HIGH) {
               currentState = State::HYGIENISIEREN;
               timer = 0;
             }
@@ -149,7 +149,7 @@ class ReservoirController {
           case State::PUMPEN:
             pump.pumpControl(true, pwmValue);
             valveReservoir.activate();
-            if (floatSwitch.readData() == HIGH) { //TO DO timeout implementieren
+            if (floatSwitch.readValue() == HIGH) { //TO DO timeout implementieren
               currentState = State::HYGIENISIEREN;
               //pumpScheduler.setAlarm(Controllino_GetHour() + 1, Controllino_GetMinute() + 1);
 

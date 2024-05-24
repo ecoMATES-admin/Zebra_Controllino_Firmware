@@ -15,11 +15,11 @@ public:
 
     bool initialize() override {
         pinMode(pin,INPUT);
-        status = SensorStatus::OK;
+        _status = SensorStatus::OK;
         return true;
     }
 
-    double readData() override {
+    double readValue() override {
         bool lastReading = digitalRead(pin);;
   
         //software debounce required?

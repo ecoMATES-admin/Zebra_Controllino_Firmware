@@ -36,7 +36,7 @@ class MqttClientController {
     PubSubClient & _client;
     JsonDocument _docOut;
 
-    char _output[100];
+    char _output[200];
     //size_t _outputCapacity;
 
   public:
